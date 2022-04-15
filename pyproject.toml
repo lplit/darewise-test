@@ -1,0 +1,74 @@
+[tool.poetry]
+authors = ["MR"]
+description = "Backlog tracking tool"
+name = "backlog"
+version = "0"
+
+[tool.poetry.dependencies]
+pydantic = "*"
+python = "^3.9"
+requests = "*"
+fastapi = "^0.75.1"
+mongoengine = "^0.24.1"
+
+[tool.poetry.dev-dependencies]
+bandit = "*"
+behave = "*"
+black = "*"
+flake8 = "*"
+isort = "*"
+mypy = "*"
+pytest = "*"
+pytest-cov = "*"
+safety = "*"
+schemathesis = "^3.13.9"
+taskipy = "*"
+types-requests = "*"
+
+
+[tool.taskipy.tasks]
+check_style = """
+echo "---- Running isort" \
+ && isort --check-only .\
+ && echo "---- Running black" \
+ && black --check src tests\
+ && echo "---- Running flake8" \
+ && flake8 src\
+"""
+
+tests = """
+echo "---- Running mypy" \
+ && mypy src\
+ && echo "---- Running pytest" \
+ && pytest --cov src tests\
+"""
+
+vulnerability_scan = """
+echo "---- Running bandit" \
+ && bandit -r src\
+ || echo "---- Running safety" \
+ && safety check\
+"""
+
+behave = "behave tests/features"
+
+[tool.black]
+exclude = '''
+(
+  /(
+    | \.git
+    | \.venv
+    | \.mypy_cache
+    | sdk
+  )/
+)
+'''
+target_version = ['py39']
+
+[tool.isort]
+line_length = 90
+profile = "black"
+
+[build-system]
+build-backend = "poetry.masonry.api"
+requires = ["poetry>=1.0"]
