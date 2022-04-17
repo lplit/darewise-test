@@ -1,7 +1,7 @@
 from __future__ import annotations  # For self-referencing pydantic models
 
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,8 @@ class EpicStatus(Enum):
 
 
 class Epic(BaseModel):
+    """Field aliases used to comply with the PascalCase specs sheet"""
+
     id: str = Field(None, alias="_id")
     tasks: List[str] = Field([], description="Tasks linked to this epic", alias="Tasks")
     bugs: List[str] = Field([], description="Bugs linked to this epic", alias="Bugs")
@@ -60,6 +62,7 @@ def check_none_linked_epics_are_status(*, epic: Epic, status: EpicStatus) -> boo
 
 
 def get_epic_status(epic: Epic) -> EpicStatus:
+    """Determines an Epic's status, based on its tasks and epics"""
 
     if len(epic.tasks) > 0 or check_any_linked_epics_are_status(
         epic=epic, status=EpicStatus.WIP

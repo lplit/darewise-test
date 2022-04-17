@@ -1,18 +1,17 @@
-
 Backlog tracking tool
-
-Example dictionary assumptions: 
-
-- Keys, i.e. "EpicA", "EpicB", etc. are unique, as this is a dictionary. 
-    For tests sake we generate a unique `[:alnum:][4]` as identifier. 
 
 # Repository
 
 Backlog tracking tool is a home assignment test project written for 
 [DareWise][darewise] for Python Developer position.
 
+Assignment Assumptions: 
+- Backlog Keys, i.e. "EpicA", "EpicB", etc. are unique, as this is a dictionary. 
+- Backlog is properly formatted, i.e. there's no circular references.
+
 The repository follows [Conventional Commits][conventional-commits] 
 and uses [GitLab CI](./.gitlab-ci.yaml) for continuous integration.
+
 
 ## Stack
 
@@ -27,6 +26,11 @@ Python tools:
 - `mypy`: Optional static type checker for Python
 - `pytest`: Framework to write small, readable tests
 - `poetry`: Dependency & devenv management
+
+I'm using `poetry` because I'm used to it but it is entirely possible 
+to generate a regular `pip`-like `requirements.txt` file within the CI 
+pipeline and use `pip` to install dependencies, making the Docker image
+even smaller.
 
 Python dependencies: 
 - [`fastapi`][fastapi]: API framework with built-in support for `pydantic` and `OpenAPI` spec
@@ -99,30 +103,6 @@ status: Enum = {
 callable with:  
 `$ poetry run task {check_style, tests, scan_vulnerabilities}`
 
-
-
----
-
-Since the specs are already almost written out in Gherkin, we'll 
-use Behavioral Test Driven Development (BDD) to write the tests.
-
-[Behave][behave], is the Gherkin language support we'll be using.
-
-An Epic is "Completed" if there is no remaining tasks and bugs, and if all its linked epics are
-"Completed" too.
-
-```python
-Feature: Epic
-  Scenario: Epic is completed
-    Given an Epic with no tasks and no bugs
-    When the linked Epic are completed
-    Then the Epic is completed
-  Scenario: Epic is not completed
-    Given a Epic with no tasks and no bugs
-    When the Epic is not completed
-    Then the Epic is not completed
-```
-Scenario:
 
 # Dev & Deployment
 

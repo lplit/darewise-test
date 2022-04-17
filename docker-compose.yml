@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  backlog-mongodb:
+    image: bitnami/mongodb:5.0-debian-10
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    environment:
+      MONGODB_ROOT_USER: "bruce"
+      MONGODB_ROOT_PASSWORD: "supersecret"
+      MONGODB_DATABASE: "backlog"
+      MONGODB_USERNAME: "backlog"
+      MONGODB_PASSWORD: "pass"
+
+  backlog-mongo-express:
+    image: mongo-express
+    # mongo-express doesn't have a retry mechanism 
+    # and crashes if mongo isn't ready when attempting
+    # to connect, hence bruceforce always restart solution
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
+      ME_CONFIG_MONGODB_SERVER: "backlog-mongodb"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "bruce"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "supersecret"
+    ports:
+      - 8021:8081
+    depends_on:
+      - backlog-mongodb
+
+  backlog:
+    image: backlog
+    build:
+      context: .
+      target: development
+    restart: unless-stopped
+    command: [ "--reload" ]
+    environment:
+      DEBUG: 1
+      MONGODB_DATABASE: "backlog"
+      MONGODB_HOSTNAME: "backlog-mongodb"
+      MONGODB_PASSWORD: "pass"
+      MONGODB_USERNAME: "backlog"
+      WEB_CONCURRENCY: 4
+    volumes:
+      - .:/app
+    # Remember: host_system:container
+    ports:
+      - 8020:8000
+    depends_on:
+      - backlog-mongodb
