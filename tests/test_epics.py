@@ -1,7 +1,5 @@
 import logging
 
-from fastapi import status
-
 from backlog.epics import (
     EpicStatus,
     check_all_linked_epics_are_status,
@@ -9,7 +7,6 @@ from backlog.epics import (
     check_none_linked_epics_are_status,
     get_epic_status,
 )
-from backlog.main import app
 
 logger = logging.getLogger(__name__)
 

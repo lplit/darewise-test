@@ -12,6 +12,6 @@ schema = from_asgi("/openapi.json", app)
 
 
 @schema.parametrize()
-@settings(deadline=None, max_examples=1024)
 def test_no_server_errors(case):
-    case.call_and_validate()
+    response = case.call_asgi()
+    case.validate_response(response)

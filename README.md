@@ -71,23 +71,23 @@ status: Enum = {
 
 /v1/
 
-- `DELETE /tasks/{task_id}` - should return the updated backlog 
+- [ ]`DELETE /tasks/{task_id}` - should return the updated backlog 
                     with new status for Epics.
-- `POST /tasks/` - create a new task
+- [ ] `POST /tasks/` - create a new task
 
-- `GET /bugs/` - list all Bugs and their corresponding [{epic_id}]
-- `DELETE /bugs/{bug_id}` - should return the updated backlog with new 
+- [ ] `GET /bugs/` - list all Bugs and their corresponding [{epic_id}]
+- [ ] `DELETE /bugs/{bug_id}` - should return the updated backlog with new 
                     status for Epics.
 
-- `GET /epics` - lists all Epics in the current backlog and their status
-- `POST /epics/{epic_id}` - add a new Task or Bug to {epic_id}
-- `GET /epics/{epic_id}` - self explanatory
+- [x] `GET /epics` - lists all Epics in the current backlog and their status
+- [x] `POST /epics/{epic_id}` - add a new Task or Bug to {epic_id}
+- [x] `GET /epics/{epic_id}` - self explanatory
 
-- `GET, POST /epics/{epic_id}/bugs` - list all Bugs from {epic_id} and linked Epics
+- [ ] `GET, POST /epics/{epic_id}/bugs` - list all Bugs from {epic_id} and linked Epics
 
-- `GET /epics/blocked&{bug_id=BUG1}` - list all blocked Epics from a {bug_id}
+- [ ] `GET /epics/blocked&{bug_id=BUG1}` - list all blocked Epics from a {bug_id}
 
-- `GET /export` - return backlog as JSON
+- [ ] `GET /export` - return backlog as JSON
 
 
 # Tests 
@@ -133,7 +133,7 @@ Standalone docker development environment in one command:
 
 This will spin up the following containers:
 
-- `debian-mini-python39-backlog`
+- `backlog`
 - `bitnami-mongodb`
 - `mongo-express`
 
@@ -143,13 +143,13 @@ This will spin up the following containers:
 
 This will spin up the following containers:
 
-- `debian-mini-python39-backlog`
+- `python:3.9-slim-backlog`
 - `bitnami-mongodb`
 - `traefik`
 
 ## Kubernetes
 
-**Requires `kubectl` version 1.16.0 or higher**
+**Requires `kubectl` version 1.14 or higher**
 
 Deploy to kubernetes cluster in one command:
 

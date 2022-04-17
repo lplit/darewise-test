@@ -14,28 +14,28 @@ example_backlog: Dict[str, Any] = {
 
 
 # Status: Pending Validation
-epic_e: Dict = {"id": "EpicE", "Tasks": [], "Bugs": ["BugE1"], "Epics": []}
+epic_e: Dict = {"epic_id": "EpicE", "Tasks": [], "Bugs": ["BugE1"], "Epics": []}
 
 # Status: Completed
-epic_c: Dict = {"id": "EpicC", "Tasks": [], "Bugs": [], "Epics": []}
+epic_c: Dict = {"epic_id": "EpicC", "Tasks": [], "Bugs": [], "Epics": []}
 
 # Status: Completed
-epic_d: Dict = {"id": "EpicD", "Tasks": [], "Bugs": [], "Epics": [epic_c]}
+epic_d: Dict = {"epic_id": "EpicD", "Tasks": [], "Bugs": [], "Epics": [Epic(**epic_c)]}
 
 # Status: WIP
 epic_b: Dict = {
-    "id": "EpicB",
+    "epic_id": "EpicB",
     "Tasks": ["TaskB1", "TaskB2"],
     "Bugs": ["BugB1"],
-    "Epics": [""],
+    "Epics": [],
 }
 
 # Status WIP
 epic_a: Dict = {
-    "id": "EpicA",
+    "epic_id": "EpicA",
     "Tasks": ["TaskA1", "TaskA2"],
     "Bugs": [],
-    "Epics": [epic_b],
+    "Epics": [Epic(**epic_b)],
 }
 
 

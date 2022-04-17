@@ -1,13 +1,8 @@
 import logging
-from typing import Optional
 
 from pydantic import BaseSettings, SecretStr
 
 logger = logging.getLogger(__name__)
-
-"""
-Application-wide configuration settings
-"""
 
 
 class Settings(BaseSettings):
