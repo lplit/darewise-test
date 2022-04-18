@@ -13,15 +13,15 @@ logger = logging.getLogger(__name__)
 @router.delete(
     "/{bug_id}",
     description="Delete a Bug",
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Epic not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Bug not found"}},
 )
 def delete_task(bug_id: str):
     try:
         EpicInDB.objects(Bugs__in=[bug_id]).update(pull__Bugs=bug_id)
         return get_epics()
     except DoesNotExist:
-        logger.error(f"Task {bug_id} does not exist")
+        logger.error(f"Bug {bug_id} does not exist")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {bug_id} does not exist",
+            detail=f"Bug {bug_id} does not exist",
         )

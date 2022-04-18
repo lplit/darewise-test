@@ -12,66 +12,65 @@ Assignment Assumptions:
   - Tasks and bugs are always assigned to an Epic (no free agents)
 
 The repository follows [Conventional Commits][conventional-commits] 
-and uses [GitLab CI](./.gitlab-ci.yaml) for continuous integration.
+and uses.
 
 
 ## Stack
 
 DevEnv tools:
 - `poetry`: dependency & devenv management
-- `.gitlab-ci.yml`: GitLab flavored CI/CD pipeline for build & deploy
 
 Python tools: 
-- `black`: Uncompromising Python code formatter 
-- `isort`: Library to sort imports
-- `flake8`: Style guide Enforcement
-- `mypy`: Optional static type checker for Python
-- `pytest`: Framework to write small, readable tests
-- `poetry`: Dependency & devenv management
+- [`black`][black]: Uncompromising Python code formatter 
+- [`isort`][isort]: Library to sort imports
+- [`flake8`][flake8]: Style guide Enforcement
+- [`mypy`][mypy]: Optional static type checker for Python
+- [`pytest`][pytest]: Framework to write small, readable tests
+- [`poetry`][poetry]: Dependency & devenv management
 
 I'm using `poetry` because I'm used to it but it is entirely possible 
 to generate a regular `pip`-like `requirements.txt` file within the CI 
-pipeline and use `pip` to install dependencies, making the Docker image
-even smaller.
+pipeline (or docker) and use `pip` to install dependencies, making 
+the Docker image even smaller (currently ~520mb uncompressed).
 
 Python dependencies: 
 - [`fastapi`][fastapi]: API framework with built-in support for `pydantic` and `OpenAPI` spec
-- [`jinja2`][jinja2]: lightweight templating engine
-- [`aiofiles`][aiofiles]: async file I/O
+- [`mongoengine`][mongoengine]: Document-Object Mapper (think ORM, but for document databases) 
+    for working with MongoDB from Python
 - [`pydantic`][pydantic]: data validation and settings management using python type annotations
 
 Containers: 
 - [`docker`][docker] images, multi-stage builds for tests, dev and prod
 - [`docker-compose`][docker-compose] stack deployment with files for dev and prod
-- [`minikube`][minikube] local Kubernetes cluster for local testing
+- [`minikube`][minikube] local Kubernetes cluster for testing
 
 Testing:
-- `pytest` for unit tests and test coverage
+- [`pytest`][pytest] for unit tests and test coverage
 - [`behave`][behave] for behavioral tests
 - [schemathesis][schemathesis] OpenAPI testing tool
 
 
 # API
 
-FastAPI supports the OpenAPI specification, which are automatically
+FastAPI supports the [OpenAPI specification][oas], which is automatically
 visualized with either SwaggerUI or Redoc, full API specifications
-with models etc, are available at: 
+with models etc, are available at:
 
 - `localhost:8000/docs` for SwaggerUI
 - `localhost:8000/redoc` for Redoc
 
 High level API architecture:
 
-- [x] GET /backlog - Get the backlog
-- [x] POST /backlog - Parse a backlog, merge if already existing
+- [x] `GET /v1/backlog` - Get the backlog
+- [x] `POST /v1/backlog` - Parse a backlog, merge if already existing
 
-- [x] GET /epics - Get all epics and their status
-- [x] POST /epics/{epic_id} - Add a task or a bug to epic. Returns backlog.
-- [x] GET /epics/{epic_id}/bugs - Return all Bugs and all linked Epics' bugs
-- [ ] GET /epics/blocked - Get all blocked Epics.
+- [x] `GET /v1/epics` - Get all epics and their status
+- [x] `POST /v1/epics/{epic_id}` - Add a task or a bug to epic. Returns backlog.
+- [x] `GET /v1/epics/{epic_id}/bugs` - Return all Bugs and all linked Epics' bugs
+- [ ] `GET /v1/epics/blocked` - Get all blocked Epics.
 
-- [x] DELETE /tasks/{task_id} - Remove a task from backlog. Returns updated backlog
-- [x] DELETE /bugs/{bug_id} - Remove a bug from backlog. Returns updated backlog
+- [x] `DELETE /v1/tasks/{task_id}` - Remove a task from backlog. Returns updated backlog
+- [x] `DELETE /v1/bugs/{bug_id}` - Remove a bug from backlog. Returns updated backlog
 
 # Dev & Deployment
 
@@ -86,7 +85,17 @@ High level API architecture:
 
 The main file defines services common to all environments.  
 The development environment comes with a `mongo-express` service, 
-that is used to monitor and browse the MongoDB server.  
+that is used to monitor and browse the MongoDB server.
+
+Standalone docker development environment in one command: 
+
+`docker-compose up`  
+
+This will spin up the following containers:
+
+- `backlog`
+- `bitnami-mongodb`
+- `mongo-express`
 
 ## Kubernetes
 
@@ -97,6 +106,8 @@ The deployment is split in two main parts:
 - [`/k8s/base/`](./k8s/base/) with the building blocks for deployments
 - [`/k8s/overlays/{development, staging, production}`](./k8s/overlays/) with the 
   specific configuration for each environment
+
+NOTE: Staging and production environments are not implemented.
 
 Deploy to kubernetes cluster in one command:
 
@@ -109,25 +120,12 @@ Steps to get it working on minikube
 ```bash
 $[1] minikube start --driver=docker --disk-size 30GB --cpus 12 --memory 16000 --addons dashboard --addons metrics-server
 $[1] minikube image build -t backlog:latest .
-$[1] kubectl kustomize build k8s/overlays/development | kubectl apply -f -`
+$[1] kubectl kustomize build k8s/overlays/development | kubectl apply -f -
 # In a new terminal, let it live
 $[2] minikube tunnel 
 $[1] minikube service backlog --url
 ```
 and browse to the url provided by the last command.
-
-
-### Development 
-
-Standalone docker development environment in one command: 
-
-`docker-compose up`  
-
-This will spin up the following containers:
-
-- `backlog`
-- `bitnami-mongodb`
-- `mongo-express`
 
 ## Tests 
 
@@ -142,13 +140,16 @@ This will spin up the following containers:
 callable with:  
 `$ poetry run task {check_style, tests, scan_vulnerabilities}`
 
-all of which should be ran from within the docker container, as such: 
+`tests` **MUST** be ran from within the docker container, as such: 
 
 `$ docker exec darewise-test_backlog_1 poetry run task check_style`
 
-with `darewise-test_backlog_1` being the container name.
+with `darewise-test_backlog_1` being the container name. The reason behind 
+is the lack of envars needed to spin up the service.
 
 # Next steps
+
+## General
 
 - Implementing specific collections for Tasks and Bugs would be the first step, as they're
 just barely strings for now. 
@@ -169,16 +170,20 @@ for Tasks and Bugs.
 
 - For k8s deployments, we could write a helm chart.
 - For k8s, secrets management is currently inexistent
+- Add kubernetes liveness and readiness probes
   
 ## Testing
 
 For the sake of this test only very rudimentary testing was implemented.  
-Proper testing should be implemented, with sequential/behavioral tests: create, verify, delete, verify.
+Proper testing should be implemented, with sequential/behavioral tests: create>verify>delete>verify.  
 Those were done manually for the sake of this test, but should be implemented. It could
-be achieved with Cucumber syntax, using *Behave* for example.
+be achieved with Cucumber syntax, using [Behave][behave] for example, or vanilla [pytest][pytest].
+
+Adding the Poetry testing tasks to the CI pipeline, or docker stages to automate the testing 
+would be beneficial.
 
 Input sanitization is not implemented at all. This leads to *schemathesis* being able 
-to parse garbage into the database:
+to post garbage into the database:
 ```json
 {
     _id: ObjectId('625daad14dfd9b8252c16887'),
@@ -202,20 +207,26 @@ to parse garbage into the database:
 }
 ```
 
-Adding the Poetry testing tasks to the CI pipeline, or docker stages to automate the testing 
-would be beneficial.
+
 
 
 <!-- Links -->
 [aiofiles]: https://aiofiles.readthedocs.io/en/stable/
 [behave]: https://behave.readthedocs.io/en/latest/
+[black]: https://black.readthedocs.io/en/stable/
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/
 [docker]: https://www.docker.com/
 [docker-compose]: https://docs.docker.com/compose/
 [fastapi]: https://fastapi.tiangolo.com/
-[minikube]: https://minikube.sigs.k8s.io/docs/start/
+[flake8]: https://flake8.pycqa.org/en/latest/
+[isort]: https://pycqa.github.io/isort/
 [jinja2]: https://jinja.palletsprojects.com/
 [kustomize]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
+[minikube]: https://minikube.sigs.k8s.io/docs/start/
+[mongoengine]: http://mongoengine.org/
+[mypy]: https://mypy.readthedocs.io/en/stable/
+[oas]: https://swagger.io/specification/
+[poetry]: https://python-poetry.org/
 [pydantic]: https://pydantic-docs.helpmanual.io/usage/
 [pytest]: https://docs.pytest.org/en/7.1.x/contents.html
 [schemathesis]: https://github.com/schemathesis/schemathesis

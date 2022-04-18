@@ -35,7 +35,6 @@ def export_backlog() -> dict[str, dict]:
     "/",
     summary="Imports backlog from a json and merge with existing",
     status_code=status.HTTP_201_CREATED,
-    # response_model=list[Epic],
 )
 def import_backlog(
     backlog: dict[str, dict] = Body(

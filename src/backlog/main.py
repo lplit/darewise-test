@@ -33,7 +33,7 @@ async def liveness_probe():
     return JSONResponse(status_code=status.HTTP_200_OK)
 
 
-app.include_router(bugs_router, prefix="/bugs", tags=["bugs"])
-app.include_router(epics_router, prefix="/epics", tags=["epics"])
-app.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
-app.include_router(backlog_router, prefix="/backlog", tags=["backlog"])
+app.include_router(bugs_router, prefix="/v1/bugs", tags=["bugs"])
+app.include_router(epics_router, prefix="/v1/epics", tags=["epics"])
+app.include_router(tasks_router, prefix="/v1/tasks", tags=["tasks"])
+app.include_router(backlog_router, prefix="/v1/backlog", tags=["backlog"])
