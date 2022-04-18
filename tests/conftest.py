@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 import pytest
 
-from backlog.epics import Epic
+from backlog.routers.epics import Epic
 
 example_backlog: Dict[str, Any] = {
     "EpicA": {"Tasks": ["TaskA1", "TaskA2"], "Bugs": [], "Epics": ["EpicB"]},
@@ -38,6 +38,13 @@ epic_a: Dict = {
     "Epics": [Epic(**epic_b)],
 }
 
+epic_f: Dict = {
+    "epic_id": "EpicA",
+    "Tasks": ["TaskA1", "TaskA2"],
+    "Bugs": ["BugA1", "BugA2"],
+    "Epics": [Epic(**epic_e), Epic(**epic_b)],
+}
+
 
 @pytest.fixture(scope="function")
 def epic_A() -> Epic:
@@ -62,3 +69,8 @@ def epic_D() -> Epic:
 @pytest.fixture(scope="function")
 def epic_E() -> Epic:
     return Epic(**epic_e)
+
+
+@pytest.fixture(scope="function")
+def epic_F() -> Epic:
+    return Epic(**epic_f)

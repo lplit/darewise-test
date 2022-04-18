@@ -7,7 +7,9 @@ Backlog tracking tool is a home assignment test project written for
 
 Assignment Assumptions: 
 - Backlog Keys, i.e. "EpicA", "EpicB", etc. are unique, as this is a dictionary. 
-- Backlog is properly formatted, i.e. there's no circular references.
+- Backlog is properly formatted, i.e. 
+  - No circular references
+  - Tasks and bugs are always assigned to an Epic (no free agents)
 
 The repository follows [Conventional Commits][conventional-commits] 
 and uses [GitLab CI](./.gitlab-ci.yaml) for continuous integration.
@@ -48,51 +50,74 @@ Testing:
 - [`behave`][behave] for behavioral tests
 - [schemathesis][schemathesis] OpenAPI testing tool
 
-# Data Types 
-
-First let's get the initial idea of what the data types we're gonna be using
-and what an api might look like.
-
-```python
-status: Enum = {
-    "wip": "Contains any task or if any of its linked epics are wip",
-    "pending_validation": "all tasks are done (removed) but Bugs are pending," +
-                          "or any Epics are 'pending_validation'" +
-                          "and no Epics are 'wip'",
-    "completed": "there is no remaining tasks" +
-                 "there is no remaining Bugs" +
-                 "and all Epics are 'completed'",
-    "blocked": "there are no remaining tasks" +
-               "and there are remaining tasks in linked Epics"
-}
-```
 
 # API
 
-/v1/
+FastAPI supports the OpenAPI specification, which are automatically
+visualized with either SwaggerUI or Redoc, full API specifications
+with models etc, are available at: 
 
-- [ ]`DELETE /tasks/{task_id}` - should return the updated backlog 
-                    with new status for Epics.
-- [ ] `POST /tasks/` - create a new task
+- `localhost:8000/docs` for SwaggerUI
+- `localhost:8000/redoc` for Redoc
 
-- [ ] `GET /bugs/` - list all Bugs and their corresponding [{epic_id}]
-- [ ] `DELETE /bugs/{bug_id}` - should return the updated backlog with new 
-                    status for Epics.
+High level API architecture:
 
-- [x] `GET /epics` - lists all Epics in the current backlog and their status
-- [x] `POST /epics/{epic_id}` - add a new Task or Bug to {epic_id}
-- [x] `GET /epics/{epic_id}` - self explanatory
+- [x] GET /backlog - Get the backlog
+- [x] POST /backlog - Parse a backlog, merge if already existing
 
-- [ ] `GET, POST /epics/{epic_id}/bugs` - list all Bugs from {epic_id} and linked Epics
+- [x] GET /epics - Get all epics and their status
+- [x] POST /epics/{epic_id} - Add a task or a bug to epic. Returns backlog.
+- [x] GET /epics/{epic_id}/bugs - Return all Bugs and all linked Epics' bugs
+- [ ] GET /epics/blocked - Get all blocked Epics.
 
-- [ ] `GET /epics/blocked&{bug_id=BUG1}` - list all blocked Epics from a {bug_id}
+- [x] DELETE /tasks/{task_id} - Remove a task from backlog. Returns updated backlog
+- [x] DELETE /bugs/{bug_id} - Remove a bug from backlog. Returns updated backlog
 
-- [ ] `GET /export` - return backlog as JSON
+# Dev & Deployment
+
+## Docker
+
+**Requires `docker-compose` version 1.29.2 or higher**  
+**Requires `docker` version 1.12 or higher**
 
 
-# Tests 
+- `docker-compose.yml`: the main configuration file
 
-## Running the tests
+
+The main file defines services common to all environments.  
+The development environment comes with a `mongo-express` service, 
+that is used to monitor and browse the MongoDB server.  
+
+## Kubernetes
+
+**Requires `kubectl` version 1.14 or higher**
+
+Using [kustomize][kustomize] to generate kube files. 
+The deployment is split in two main parts: 
+- [`/k8s/base/`](./k8s/base/) with the building blocks for deployments
+- [`/k8s/overlays/{development, staging, production}`](./k8s/overlays/) with the 
+  specific configuration for each environment
+
+Deploy to kubernetes cluster in one command:
+
+`kubectl kustomize build k8s/overlays/development | kubectl apply -f -`
+
+
+### Development 
+
+Standalone docker development environment in one command: 
+
+`docker-compose up`  
+
+This will spin up the following containers:
+
+- `backlog`
+- `bitnami-mongodb`
+- `mongo-express`
+
+## Tests 
+
+### Running the tests
 
 3 steps of tests are available to run:
 
@@ -103,39 +128,11 @@ status: Enum = {
 callable with:  
 `$ poetry run task {check_style, tests, scan_vulnerabilities}`
 
+all of which should be ran from within the docker container, as such: 
 
-# Dev & Deployment
+`$ docker exec darewise-test_backlog_1 poetry run task check_style`
 
-## Docker
-
-**Requires `docker-compose` version 1.29.2 or higher**  
-**Requires `docker` version 1.12 or higher**
-
-
-`docker-compose` files are split into 3 parts: 
-
-- `docker-compose.yml`: the main configuration file
-- `docker-compose.override.yml`: the development configuration file
-- `docker-compose.prod.yml`: the production configuration file
-
-The main file defines services common to all environments.  
-The development environment comes with a `mongo-express` service, 
-that is used to monitor and browse the MongoDB server.  
-The production environment comes with a `Traefik` service.
-Trafik manages TLS and routing for our application.
-
-### Development 
-
-Standalone docker development environment in one command: 
-
-`docker-compose up`  
-*No need to specify the main or override file - they are automatically parsed*
-
-This will spin up the following containers:
-
-- `backlog`
-- `bitnami-mongodb`
-- `mongo-express`
+with `darewise-test_backlog_1` being the container name.
 
 ### Production
 
@@ -147,13 +144,55 @@ This will spin up the following containers:
 - `bitnami-mongodb`
 - `traefik`
 
-## Kubernetes
 
-**Requires `kubectl` version 1.14 or higher**
+# Next steps
 
-Deploy to kubernetes cluster in one command:
+- Implementing specific collections for Tasks and Bugs would be the first step, as they're
+just barely strings for now. 
 
-`kubectl kustomize build k8s/overlays/development | kubectl apply -f -`
+- Although Reference links for Epics are implemented, it would be necessary to do the same 
+for Tasks and Bugs.
+
+- Streamlining the Pydantic Models for input/output would be a good idea.
+
+- The endpoint to list all *Blocked* Epics was not implemented because the spec given was
+  identical to *Work In Progress* and there were many other things to do.
+
+
+## Testing
+
+For the sake of this test only very rudimentary testing was implemented.  
+Proper testing should be implemented, with sequential/behavioral tests: create, verify, delete, verify.
+Those were done manually for the sake of this test, but should be implemented. It could
+be achieved with Cucumber syntax, using *Behave* for example.
+
+Input sanitization is not implemented at all. This leads to *schemathesis* being able 
+to parse garbage into the database:
+```json
+{
+    _id: ObjectId('625daad14dfd9b8252c16887'),
+    epic_id: '¿ýé\u0083񀃭a)',
+    Tasks: [
+        '',
+        '¸􌉡½÷',
+        '\u0019=\f\u009aq',
+        '\u001a\u0081õ',
+        'k'
+    ],
+    Bugs: [
+        '\u001a󌜤æT𷞔\u000b¥񴠇\u0094<𠛇',
+        '&à',
+        'WÒ蚅c',
+        '\u000f󸒎x~',
+        'w2z',
+        '\u0086-Z'
+    ],
+    Epics: []
+}
+```
+
+Adding the Poetry testing tasks to the CI pipeline, or docker stages to automate the testing 
+would be beneficial.
 
 
 <!-- Links -->
@@ -165,6 +204,7 @@ Deploy to kubernetes cluster in one command:
 [fastapi]: https://fastapi.tiangolo.com/
 [minikube]: https://minikube.sigs.k8s.io/docs/start/
 [jinja2]: https://jinja.palletsprojects.com/
+[kustomize]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [pydantic]: https://pydantic-docs.helpmanual.io/usage/
 [pytest]: https://docs.pytest.org/en/7.1.x/contents.html
 [schemathesis]: https://github.com/schemathesis/schemathesis
