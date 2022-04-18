@@ -38,7 +38,7 @@ class Epic(BaseModel):
 
 
 class EpicInDB(Document):
-    epic_id: str = StringField(unique=True)
-    tasks = ListField()
-    bugs = ListField()
-    epics = ListField(ReferenceField("EpicInDB"))
+    epic_id: str = StringField(unique=True, required=True)
+    tasks = ListField(default=[])
+    bugs = ListField(default=[])
+    epics = ListField(ReferenceField("EpicInDB"), default=[])
