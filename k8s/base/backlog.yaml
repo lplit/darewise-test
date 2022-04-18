@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backlog
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backlog
+  labels:
+    app: backlog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backlog
+  template:
+    metadata:
+      labels:
+        app: backlog
+    spec:
+      serviceAccountName: backlog
+      containers:
+        - name: backlog
+          image: backlog:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: backlog-configmap
+---
+# Backlog Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backlog
+spec:
+  type: LoadBalancer
+  selector:
+    app: backlog
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

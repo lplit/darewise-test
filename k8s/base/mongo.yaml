@@ -1,0 +1,58 @@
+# Datasink Mongo Deployment
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  labels:
+    app: database
+spec:
+  serviceName: mongodb
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      securityContext:
+        fsGroup: 2000
+      containers:
+        - name: mongodb
+          image: bitnami/mongodb:5.0-debian-10
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGODB_DATABASE
+              value: backlog
+            - name: MONGODB_USERNAME
+              value: backlog
+            - name: MONGODB_PASSWORD
+              value: pass
+            - name: MONGODB_ROOT_PASSWORD
+              value: datasink
+          volumeMounts:
+            - mountPath: /bitnami/mongodb
+              name: mongo-persistent-storage
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-persistent-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
+
+---
+# Mongo Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  clusterIP: None
+  selector:
+    app: database
+  ports:
+    - name: mongo
+      port: 27017
